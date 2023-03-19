@@ -1,6 +1,6 @@
 library(tidyverse)
 
-
+# Checking connection
 
 
 find_test_stat <- function(m, n, theta_vec,
