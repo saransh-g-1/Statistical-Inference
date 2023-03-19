@@ -1,0 +1,1 @@
+* To read .RData files use the **readRDS()** function of R. For example to load the *squared_expectations.RData* file, use the code: **readRDS("https://github.com/saransh-g-1/Statistical-Inference/blob/LMP-rohan/LMP-scale/squared_expectations.RData")**
