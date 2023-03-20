@@ -2,14 +2,22 @@ library(tidyverse)
 library(purrr)
 library(patchwork)
 
+# File paths that will be required. Please declare any new file paths HERE.
+working_directory = str_replace_all(getwd(), "[/]", "\\\\")
+file_path_squared_expectation = str_c(working_directory, "\\LMP-scale\\squared_expectations.RData")
+file_path_save_result = str_c(working_directory, "\\LMP-scale\\results.RData")
+file_path_capon_dist_free = str_c(working_directory, "\\LMP-scale\\capon_dist_free.jpg")
+file_path_klotz_dist_free = str_c(working_directory, "\\LMP-scale\\klotz_dist_free.jpg")
+
 
 num_replications <- 200
-
 
 find_test_stat <- function(m, n, theta_vec,
                            theta_names, density_fun, ...){
   
-  expectations <- readRDS("D:\\Rohan\\Maths\\MStat\\Semester 2\\Non parametric\\Project\\squared_expectations.RData")[[(m+n-1)]]
+  expectations <- readRDS(file_path_squared_expectation)[[(m+n-1)]]
+  # (m+n-1) is used as index as the list starts from m+n=2
+  
   data_x <- lapply(theta_vec, 
                    FUN = function(x) density_fun(n, scale_param = x, ...))
   names(data_x) <- theta_names
@@ -32,7 +40,7 @@ find_test_stat <- function(m, n, theta_vec,
   
   klotz_test_stat_value <- lapply(x_ranks_vec, 
                                   function(x){ 
-                                    sapply(1:length(x), function(y) dnorm(x[y]/(m+n+1)))
+                                    sapply(1:length(x), function(y) qnorm(x[y]/(m+n+1)))
                                   }) %>%
     lapply(FUN = function(x) x^2)%>%
     sapply(FUN = sum)
@@ -126,7 +134,7 @@ results <- pmap(inputs, run_simulation)
 
 
 saveRDS(results,
-        file = "D:\\Rohan\\Maths\\MStat\\Semester 2\\Non parametric\\Project\\results.RData")
+        file = file_path_save_result)
 
 
 # Can be read using readRDS() function in R
@@ -169,7 +177,7 @@ dist_free_plots <- lapply(unique(null_dist_capon_df$nm), function(name){
 capon_dist_free <- (dist_free_plots[[1]] + dist_free_plots[[2]])/(dist_free_plots[[3]] + dist_free_plots[[4]])/dist_free_plots[[5]]
 
 ggsave(capon_dist_free, 
-       filename = "D:\\Rohan\\Maths\\MStat\\Semester 2\\Non parametric\\Project\\capon_dist_free.jpg",
+       filename = file_path_capon_dist_free,
        units = "cm",
        height = 16, width = 20)
 
@@ -211,7 +219,7 @@ dist_free_klotz_plots <- lapply(unique(null_dist_klotz_df$nm), function(name){
 klotz_dist_free <- (dist_free_klotz_plots[[1]] + dist_free_klotz_plots[[2]])/(dist_free_klotz_plots[[3]] + dist_free_klotz_plots[[4]])/dist_free_klotz_plots[[5]]
 
 ggsave(klotz_dist_free, 
-       filename = "D:\\Rohan\\Maths\\MStat\\Semester 2\\Non parametric\\Project\\klotz_dist_free.jpg",
+       filename = file_path_klotz_dist_free,
        units = "cm",
        height = 16, width = 20)
 
