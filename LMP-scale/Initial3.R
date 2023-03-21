@@ -142,6 +142,9 @@ saveRDS(results,
 
 ###################################
 
+
+results<- readRDS("D:\\Rohan\\Maths\\MStat\\Semester 2\\Non parametric\\Project\\results.RData")
+
 null_dist_capon_df <- sapply(1:(num_replications), FUN = function(x){
   sapply(1:25, function(y) results[[y]][[x]][[1]][1])}) %>%
   as_tibble() %>%
@@ -222,6 +225,86 @@ ggsave(klotz_dist_free,
        filename = file_path_klotz_dist_free,
        units = "cm",
        height = 16, width = 20)
+
+
+############################
+
+library(magick)
+
+dir_out <- file.path(tempdir(), "capon_theta_vary")
+dir.create(dir_out, recursive = TRUE)
+
+for(j in 1:23){
+  
+  null_dist_capon_df <- sapply(1:(num_replications), FUN = function(x){
+    sapply(1:25, function(y) results[[y]][[x]][[1]][j])}) %>%
+    as_tibble() %>%
+    mutate(nm = rep(c("n = 6, m = 8", "n = 15, m = 13", 
+                      "n = 25, m = 30", "n = 83, m = 70", "n = 100, m = 100"), each = 5),
+           distr = rep(c("norm_dist", "exp_dist", "cauchy_dist", "logistic_dist", 
+                         "gamma_dist"), times = 5)) %>%
+    select(nm, distr, everything()) %>%
+    pivot_longer(cols = starts_with("V"),
+                 names_to = "colname",
+                 values_to = "test_stat_value") %>%
+    select(-colname)
+  
+  dist_free_plots <- lapply(unique(null_dist_capon_df$nm), function(name){
+    null_dist_capon_df %>%
+      filter(nm == name) %>%
+      ggplot(aes(x = test_stat_value, color = distr))+
+      geom_density(show.legend = F)+
+      stat_density(geom = "line", position = "identity")+
+      labs(x  = "Capon's Test Statistic Value",
+           y = "Density",
+           title = paste(name),
+           color = "Distribution"
+      )+
+      scale_color_manual(values = c("black", "green", "steelblue", "yellow", "red")) +
+      #  facet_wrap(~nm, ncol = 2 )+
+      theme_bw()+
+      theme(plot.title = element_text(hjust = 0.5, face = "bold"))
+  })  
+  
+  
+  
+  capon_dist_free <- (dist_free_plots[[1]] + dist_free_plots[[2]])/(dist_free_plots[[3]] + dist_free_plots[[4]])/dist_free_plots[[5]]
+  capon_dist_free <- capon_dist_free +
+    plot_annotation(title = paste("theta =", 1 + j/20))
+
+  
+  
+  fp <- file.path(dir_out, paste0(letters[j], ".png"))
+  
+  ggsave(plot = capon_dist_free, 
+         filename = fp, 
+         width = 18.5, height = 18, units = "cm",
+         device = "png")
+}
+
+
+list.files(dir_out, full.names = TRUE) %>%
+  lapply(image_read) %>%
+  image_join() %>%
+  image_animate(fps = 1) %>%
+  image_write(image = .,
+              path = "D:\\Rohan\\Maths\\MStat\\Semester 2\\Non parametric\\Project\\capon_varying_theta.gif")
+
+unlink(dir_out, recursive = T)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
